@@ -1,0 +1,194 @@
+# This takes one schedule parameters as arguments
+psp_default: &PSP_DEFAULT
+    start: >-
+        sudo numactl -N0 -m0 {0.dirs.clt}/client/client
+        --config-path {config_file}
+        --duration {duration}
+        --label {0.label}
+        --ip {srv_ip}
+        --port {srv_port}
+        --max-concurrency {max_clt_cc}
+        --sample {downsample}
+        --rate {rate}
+        --cmd-list {cmd_list}
+        --cmd-ratios {cmd_ratios}
+        --outdir {outdir}
+        --mb-reqs
+        --collect-logs {collect_logs}
+    stop: sudo kill {pid}
+    check_rtn: 0
+
+psp_no_sched: &PSP_NO_SCHED
+    start: >-
+        sudo numactl -N0 -m0 {0.dirs.clt}/client/client
+        --config-path {config_file}
+        --label {0.label}
+        --ip {srv_ip}
+        --port {srv_port}
+        --max-concurrency {max_clt_cc}
+        --sample {downsample}
+        --collect-logs {collect_logs}
+        --outdir {outdir}
+        --req-offset {req_offset}
+    stop: sudo kill {pid}
+    check_rtn: 0
+
+shinjuku:
+    start: >-
+        sudo numactl -N0 -m0 {0.dirs.base_dir}/Persephone/submodules/shinjuku/dp/shinjuku -c {cfg} -p {pol} -o {req_offset} -w {workload}
+    stop: sudo killall shinjuku
+    check_rtn: -1
+    log:
+        dir: server
+        log: server
+        out: server.out
+        err: server.err
+
+refreshdb:
+    start: >-
+        cd /tmp && sudo rm -rf my_db && {0.dirs.base_dir}/Persephone/submodules/shinjuku/db/create_db
+
+iokernel:
+    start: sudo numactl -N0 -m0 {0.dirs.shenango}/iokerneld ias 0,2,4,6,8,10,12,14,16,18,20,22,24,26,28,30,32,34,36,38,40,42,44,46,48,50,52,54,56,58,60,62 noht
+    stop: sudo kill {pid}
+    check_rtn: -1
+    log:
+        dir: iokernel
+        log: iokernel
+        out: iokernel.out
+        err: iokernel.err
+
+shenango-psp-fakework:
+    start: >-
+        sudo numactl -N0 -m0 {0.dirs.shenango}/apps/psp_fakework/psp_fakework {config} 6789
+    stop: sudo kill {pid}
+    check_rtn: -1
+    log:
+        dir: server
+        log: server
+        out: server.out
+        err: server.err
+
+shenango-rocksdb:
+    start: >-
+        cd /tmp && sudo rm -rf my_db && {0.dirs.shenango}/apps/rocksdb/create_db &&
+        sudo numactl -N0 -m0 {0.dirs.shenango}/apps/rocksdb/rocksdb_server {config} 6789
+    stop: sudo kill {pid}
+    check_rtn: -1
+    log:
+        dir: server
+        log: server
+        out: server.out
+        err: server.err
+
+psp_app:
+    start: >-
+        cd {0.dirs.psp_apps}/app &&
+        sudo numactl -N0 -m0 ./psp-app
+        --cfg {config}
+        --label {0.label}
+    stop: sudo kill {pid}
+    check_rtn: 0
+    log:
+        dir: server
+        log: server
+        out: server.out
+        err: server.err
+
+psp_rate_client_old0:
+    <<: *PSP_DEFAULT
+    log:
+        append: 1
+        dir: client0
+        log: client0
+        out: client.out
+        err: client.err
+
+psp_rate_client_old1:
+    <<: *PSP_DEFAULT
+    log:
+        append: 1
+        dir: client1
+        log: client1
+        out: client.out
+        err: client.err
+
+psp_rate_client_old2:
+    <<: *PSP_DEFAULT
+    log:
+        append: 1
+        dir: client2
+        log: client2
+        out: client.out
+        err: client.err
+
+psp_rate_client_old3:
+    <<: *PSP_DEFAULT
+    log:
+        append: 1
+        dir: client3
+        log: client3
+        out: client.out
+        err: client.err
+
+psp_rate_client_old4:
+    <<: *PSP_DEFAULT
+    log:
+        append: 1
+        dir: client4
+        log: client4
+        out: client.out
+        err: client.err
+
+psp_rate_client_old5:
+    <<: *PSP_DEFAULT
+    log:
+        append: 1
+        dir: client5
+        log: client5
+        out: client.out
+        err: client.err
+
+psp_rate_client0:
+    <<: *PSP_NO_SCHED
+    log:
+        append: 1
+        dir: client0
+        log: client0
+        out: client.out
+        err: client.err
+psp_rate_client1:
+    <<: *PSP_NO_SCHED
+    log:
+        dir: client1
+        log: client1
+        out: client.out
+        err: client.err
+psp_rate_client2:
+    <<: *PSP_NO_SCHED
+    log:
+        dir: client2
+        log: client2
+        out: client.out
+        err: client.err
+psp_rate_client3:
+    <<: *PSP_NO_SCHED
+    log:
+        dir: client3
+        log: client3
+        out: client.out
+        err: client.err
+psp_rate_client4:
+    <<: *PSP_NO_SCHED
+    log:
+        dir: client4
+        log: client4
+        out: client.out
+        err: client.err
+psp_rate_client5:
+    <<: *PSP_NO_SCHED
+    log:
+        dir: client5
+        log: client5
+        out: client.out
+        err: client.err
